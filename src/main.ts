@@ -1,9 +1,10 @@
 import * as three from 'three';
 
-const FOV = 60; // Match game camera's default FOV
-const ASPECT_RATIO = 640 / 480; // Match Gamecube's output aspect ratio
-const NEAR_DISTANCE = 0.1; // Match game camera's default near distance
-const FAR_DISTANCE = 20000; // Match game camera's default far distance
+// Match the original game's camera settings, for now
+const FOV = 60;
+const ASPECT_RATIO = 640 / 480;
+const NEAR_DISTANCE = 0.1;
+const FAR_DISTANCE = 20000;
 
 class Main {
   private scene: three.Scene;
@@ -18,6 +19,7 @@ class Main {
     this.camera = new three.PerspectiveCamera(FOV, ASPECT_RATIO, NEAR_DISTANCE, FAR_DISTANCE);
     this.renderer = new three.WebGLRenderer({ antialias: true });
     document.body.appendChild(this.renderer.domElement);
+    this.clock = new three.Clock();
 
     const axis = new three.AxesHelper(10);
 
@@ -56,9 +58,10 @@ class Main {
   }
 
   private update(): void {
-    const timer = 0.02 * Date.now();
-    this.box.position.y = Math.abs(0.5 + Math.abs(0.5 * Math.sin(timer)));
-    this.box.rotation.x += 0.1;
+    const deltaSeconds = this.clock.getDelta();
+
+    this.box.position.y = Math.abs(0.5 + Math.abs(0.8 * Math.sin(15 * this.clock.getElapsedTime())));
+    this.box.rotation.x += deltaSeconds * 8;
     this.renderer.render(this.scene, this.camera);
   }
 
