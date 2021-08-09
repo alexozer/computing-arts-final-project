@@ -1,8 +1,7 @@
 import * as th from 'three';
-import { runInThisContext } from 'vm';
-import { threadId } from 'worker_threads';
 import { genSim, updateSim } from './sim';
 import { Obj, Sim } from './simTypes';
+import { OrbitControls } from './OrbitControls';
 
 // Match the original game's camera settings, for now
 const FOV = 60;
@@ -15,6 +14,7 @@ export class RenderScene {
   private camera: th.PerspectiveCamera;
   private renderer: th.WebGLRenderer;
   private clock: th.Clock;
+  private orbit: OrbitControls;
 
   private sim: Sim;
   private simObjMap: Map<Obj, th.Mesh>;
@@ -23,6 +23,8 @@ export class RenderScene {
     this.scene = new th.Scene();
     this.camera = new th.PerspectiveCamera(FOV, ASPECT_RATIO, NEAR_DISTANCE, FAR_DISTANCE);
     this.renderer = new th.WebGLRenderer({ antialias: true });
+    this.renderer.setPixelRatio( window.devicePixelRatio );
+    this.renderer.outputEncoding = th.sRGBEncoding;
     document.body.appendChild(this.renderer.domElement);
     this.clock = new th.Clock();
 
@@ -30,13 +32,13 @@ export class RenderScene {
 
     this.scene.add(axis);
 
-    const light = new th.DirectionalLight(0xffffff, 1.0);
+    const light = new th.DirectionalLight(0xffffff, 0.5);
 
     light.position.set(100, 100, 100);
 
     this.scene.add(light);
 
-    const light2 = new th.DirectionalLight(0xffffff, 1.0);
+    const light2 = new th.DirectionalLight(0xffffff, 0.5);
 
     light2.position.set(-100, 100, -100);
 
@@ -51,6 +53,11 @@ export class RenderScene {
     this.renderer.setAnimationLoop(() => this.update());
     window.addEventListener('resize', () => this.onResize());
     this.onResize();
+
+    this.orbit = new OrbitControls(this.camera, this.renderer.domElement);
+    this.orbit.update();
+
+    this.scene.background = new th.Color(0x444488);
 
     this.sim = genSim();
     this.simObjMap = new Map();
@@ -76,7 +83,7 @@ export class RenderScene {
     // TODO should we use instancing here eventually?
     for (const simObj of this.sim.objs) {
       if (!this.simObjMap.has(simObj)) {
-        const mesh = new th.Mesh(new th.BoxGeometry(), new th.MeshPhongMaterial());
+        const mesh = new th.Mesh(new th.BoxGeometry(), new th.MeshToonMaterial());
         this.simObjMap.set(simObj, mesh);
         this.scene.add(mesh);
       }
@@ -89,7 +96,7 @@ export class RenderScene {
       mesh.scale.x = simObj.scaleX * simObj.scaleOverall;
       mesh.scale.y = simObj.scaleY * simObj.scaleOverall;
       mesh.scale.z = simObj.scaleOverall;
-      (mesh.material as th.MeshPhongMaterial).color.setHSL(simObj.hue, 1, simObj.lightness);
+      (mesh.material as th.MeshToonMaterial).color.setHSL(simObj.hue, 1, simObj.lightness);
       // TODO oscillation stuff
     }
   }
