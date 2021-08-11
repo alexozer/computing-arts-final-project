@@ -1,5 +1,6 @@
 import { vec3 } from "gl-matrix";
 import { MarkovModel, MarkovTable, Mutation, Obj, Sim } from "./simTypes";
+import * as th from 'three';
 
 let nextId = 0;
 
@@ -7,28 +8,28 @@ export function genUniqueId(): string {
   return `obj${nextId++}`;
 }
 
-const kNumMutations = 8;
+const kNumMutations = 7;
 
-function randSmall() { return (Math.random() - 0.5) * 0.02 }
+function randSmall() { return (Math.random() - 0.5) * 2 }
 
-function clamp(x: number, min: number, max: number) { return Math.max(min, Math.min(max, x)); }
+function clamp(val: number, min: number, max: number) {
+  return Math.max(min, Math.min(val, max));
+}
+
+function inverseLerp(val: number, min: number, max: number): number {
+  return (val - min) / (max - min);
+}
 
 function genMutation(): Mutation {
   const mutIdx = Math.floor(Math.random() * kNumMutations);
   switch (mutIdx) {
-    case 0: {
-      return {
-        kind: 'pos',
-        delta: vec3.fromValues(randSmall(), randSmall(), randSmall()),
-      }
-    }
-    case 1: return { kind: 'rotX', delta: randSmall() };
-    case 2: return { kind: 'rotY', delta: randSmall() };
+    case 0: return { kind: 'rotX', delta: randSmall() };
+    case 1: return { kind: 'rotY', delta: randSmall() };
+    case 2: return { kind: 'scaleX', delta: randSmall() };
     case 3: return { kind: 'scaleX', delta: randSmall() };
-    case 4: return { kind: 'scaleX', delta: randSmall() };
-    case 5: return { kind: 'scaleOverall', delta: randSmall() };
-    case 6: return { kind: 'hue', delta: randSmall() };
-    case 7: return { kind: 'lightness', delta: randSmall() };
+    case 4: return { kind: 'scaleOverall', delta: randSmall() };
+    case 5: return { kind: 'hue', delta: randSmall() };
+    case 6: return { kind: 'lightness', delta: randSmall() };
     default: throw new Error('Invariant violation');
   }
 }
@@ -85,9 +86,48 @@ export function genSim(): Sim {
   };
   sim.objs.add(obj)
 
+  console.log(sim);
+
   return sim;
 }
 
-export function updateSim(sim: Sim, deltaSeconds: number) {
+function pickMutation(propValue: number, propMin: number, propMax: number, table: MarkovTable): Mutation {
+  const t = inverseLerp(propValue, propMin, propMax);
+  let cumulProb = 0;
+  for (let i = 0; i < kNumMutations; i++) {
+    cumulProb += table.probs[i];
+    if (t < cumulProb) {
+      return table.mutations[i];
+    }
+  }
+  return table.mutations[0];
+}
 
+function mutateObj(obj: Obj, model: MarkovModel, deltaSeconds: number) {
+  const rotXMut = pickMutation(obj.rotX, 0, 2 * Math.PI, model.rotX);
+  obj.rotX = (obj.rotX + rotXMut.delta * deltaSeconds + 2 * Math.PI) % (2 * Math.PI);
+
+  const rotYMut = pickMutation(obj.rotY, 0, 2 * Math.PI, model.rotY);
+  obj.rotY = (obj.rotY + rotYMut.delta * deltaSeconds + 2 * Math.PI) % (2 * Math.PI);
+
+  const scaleXMut = pickMutation(obj.scaleX, 0.2, 2.5, model.scaleX);
+  obj.scaleX = clamp(obj.scaleX + scaleXMut.delta * deltaSeconds, 0.2, 2.5);
+
+  const scaleYMut = pickMutation(obj.scaleY, 0.2, 2.5, model.scaleY);
+  obj.scaleY = clamp(obj.scaleY + scaleYMut.delta * deltaSeconds, 0.2, 2.5);
+
+  const scaleOverallMut = pickMutation(obj.scaleOverall, 0.2, 2.5, model.scaleOverall);
+  obj.scaleOverall = clamp(obj.scaleOverall + scaleOverallMut.delta * deltaSeconds, 0.2, 2.5);
+
+  const hueMut = pickMutation(obj.hue, 0, 1, model.hue);
+  obj.hue = (obj.hue + hueMut.delta * deltaSeconds + 1) % 1;
+
+  const lightnessMut = pickMutation(obj.lightness, 0.2, 0.9, model.lightness);
+  obj.lightness = clamp(obj.lightness + lightnessMut.delta, 0.2, 0.9);
+}
+
+export function updateSim(sim: Sim, deltaSeconds: number) {
+  for (let obj of sim.objs) {
+    mutateObj(obj, sim.markovModel, deltaSeconds);
+  }
 }

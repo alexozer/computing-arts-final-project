@@ -1,9 +1,6 @@
 import { vec3 } from 'gl-matrix';
 
 export type Mutation = {
-  kind: 'pos',
-  delta: vec3,
-} | {
   kind: 'rotX',
   delta: number,
 } | {
