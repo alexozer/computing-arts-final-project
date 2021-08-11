@@ -57,7 +57,7 @@ export class RenderScene {
     this.orbit = new OrbitControls(this.camera, this.renderer.domElement);
     this.orbit.update();
 
-    this.scene.background = new th.Color(0x444488);
+    this.scene.background = new th.Color(0x343468);
 
     this.sim = genSim();
     this.simObjMap = new Map();
@@ -91,6 +91,9 @@ export class RenderScene {
 
     // Apply simulation properties to threejs meshes
     for (const [simObj, mesh] of this.simObjMap.entries()) {
+      mesh.position.x = simObj.pos[0];
+      mesh.position.y = simObj.pos[1];
+      mesh.position.z = simObj.pos[2];
       mesh.rotation.x = simObj.rotX;
       mesh.rotation.y = simObj.rotY;
       mesh.scale.x = simObj.scaleX * simObj.scaleOverall;
