@@ -8,7 +8,7 @@ export function genUniqueId(): string {
   return `obj${nextId++}`;
 }
 
-const kNumMutations = 7;
+const kNumMutations = 6;
 
 function randSmall() { return (Math.random() - 0.5) * 2 }
 
@@ -29,7 +29,6 @@ function genMutation(): Mutation {
     case 3: return { kind: 'scaleX', delta: randSmall() };
     case 4: return { kind: 'scaleOverall', delta: randSmall() };
     case 5: return { kind: 'hue', delta: randSmall() };
-    case 6: return { kind: 'lightness', delta: randSmall() };
     default: throw new Error('Invariant violation');
   }
 }
@@ -59,7 +58,6 @@ function genMarkovModel(): MarkovModel {
     scaleY: genMarkovTable(),
     scaleOverall: genMarkovTable(),
     hue: genMarkovTable(),
-    lightness: genMarkovTable(),
   };
 }
 
@@ -79,7 +77,6 @@ export function genSim(): Sim {
     scaleY: 1,
     scaleOverall: 1,
     hue: 0.5,
-    lightness: 0.8,
     oscilFreq: 0,
     oscilAmpl: 0,
     nnObj: null,
@@ -121,9 +118,6 @@ function mutateObj(obj: Obj, model: MarkovModel, deltaSeconds: number) {
 
   const hueMut = pickMutation(obj.hue, 0, 1, model.hue);
   obj.hue = (obj.hue + hueMut.delta * deltaSeconds + 1) % 1;
-
-  const lightnessMut = pickMutation(obj.lightness, 0.2, 0.9, model.lightness);
-  obj.lightness = clamp(obj.lightness + lightnessMut.delta, 0.2, 0.9);
 }
 
 export function updateSim(sim: Sim, deltaSeconds: number) {

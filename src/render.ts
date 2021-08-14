@@ -99,7 +99,7 @@ export class RenderScene {
       mesh.scale.x = simObj.scaleX * simObj.scaleOverall;
       mesh.scale.y = simObj.scaleY * simObj.scaleOverall;
       mesh.scale.z = simObj.scaleOverall;
-      (mesh.material as th.MeshToonMaterial).color.setHSL(simObj.hue, 1, simObj.lightness);
+      (mesh.material as th.MeshToonMaterial).color.setHSL(simObj.hue, 1, 0.5);
       // TODO oscillation stuff
     }
   }

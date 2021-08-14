@@ -18,9 +18,6 @@ export type Mutation = {
 } | {
   kind: 'hue',
   delta: number,
-} | {
-  kind: 'lightness',
-  delta: number,
 };
 
 export type MarkovTable = {
@@ -36,7 +33,6 @@ export type MarkovModel = {
   scaleY: MarkovTable,
   scaleOverall: MarkovTable,
   hue: MarkovTable,
-  lightness: MarkovTable,
 }
 
 export type Obj = {
@@ -48,7 +44,6 @@ export type Obj = {
   scaleY: number,
   scaleOverall: number,
   hue: number,
-  lightness: number,
   oscilFreq: number,
   oscilAmpl: number,
   nnObj: any, // Object in Nearby nearest-neighbor map
