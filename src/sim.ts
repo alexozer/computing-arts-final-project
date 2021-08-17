@@ -1,14 +1,15 @@
 import { vec3 } from "gl-matrix";
 import { MarkovModel, MarkovTable, Mutation, Obj, Sim } from "./simTypes";
 import * as th from 'three';
+import { pluginFirst } from "systemjs";
+
+const kNumPropSegments = 1;
 
 let nextId = 0;
 
 export function genUniqueId(): string {
   return `obj${nextId++}`;
 }
-
-const kNumMutations = 6;
 
 function randSmall() { return (Math.random() - 0.5) * 2 }
 
@@ -20,30 +21,40 @@ function inverseLerp(val: number, min: number, max: number): number {
   return (val - min) / (max - min);
 }
 
-function genMutation(): Mutation {
-  const mutIdx = Math.floor(Math.random() * kNumMutations);
-  switch (mutIdx) {
-    case 0: return { kind: 'rotX', delta: randSmall() };
-    case 1: return { kind: 'rotY', delta: randSmall() };
-    case 2: return { kind: 'scaleX', delta: randSmall() };
-    case 3: return { kind: 'scaleX', delta: randSmall() };
-    case 4: return { kind: 'scaleOverall', delta: randSmall() };
-    case 5: return { kind: 'hue', delta: randSmall() };
-    default: throw new Error('Invariant violation');
-  }
-}
+// function genMutation(): Mutation {
+//   const mutIdx = Math.floor(Math.random() * kNumMutations);
+//   switch (mutIdx) {
+//     case 0: return { kind: 'rotX', delta: randSmall() };
+//     case 1: return { kind: 'rotY', delta: randSmall() };
+//     case 2: return { kind: 'scaleX', delta: randSmall() };
+//     case 3: return { kind: 'scaleX', delta: randSmall() };
+//     case 4: return { kind: 'scaleOverall', delta: randSmall() };
+//     case 5: return { kind: 'hue', delta: randSmall() };
+//     default: throw new Error('Invariant violation');
+//   }
+// }
+
+// Let's try a constant table of mutations and let probabilities control everything else
+const kBaseMutations: Mutation[] = [
+  { kind: 'rotX', delta: 2 * Math.PI / 16 },
+  { kind: 'rotY', delta: 2 * Math.PI / 16 },
+  { kind: 'scaleX', delta: 0.2 },
+  { kind: 'scaleY', delta: 0.2 },
+  { kind: 'scaleOverall', delta: 0.2 },
+  { kind: 'hue', delta: Math.PI / 20 },
+];
+const kMutations: Mutation[] = kBaseMutations.concat(kBaseMutations.map(m => ({ kind: m.kind, delta: -m.delta })));
 
 function genMarkovTable(): MarkovTable {
-  const mutations: Mutation[] = [];
+  const mutations: Mutation[] = kMutations;
   const probs: number[] = [];
   let sum = 0;
-  for (let i = 0; i < kNumMutations; i++) {
-    mutations.push(genMutation());
-    const weight = Math.random();
-    probs.push(weight);
-    sum += weight;
+  for (let i = 0; i < mutations.length; i++) {
+    const p = Math.random();
+    probs.push(p);
+    sum += p;
   }
-  for (let i = 0; i < kNumMutations; i++) {
+  for (let i = 0; i < mutations.length; i++) {
     probs[i] /= sum;
   }
   return { mutations, probs };
@@ -81,6 +92,9 @@ export function genSim(): Sim {
     oscilAmpl: 0,
     nnObj: null,
   };
+  for (let i = 0; i < 10; i++) {
+    mutateObj(obj, sim.markovModel, 0.2);
+  }
   sim.objs.add(obj)
 
   console.log(sim);
@@ -90,13 +104,16 @@ export function genSim(): Sim {
 
 function pickMutation(propValue: number, propMin: number, propMax: number, table: MarkovTable): Mutation {
   const t = inverseLerp(propValue, propMin, propMax);
+  const modT = (t % (1 / kNumPropSegments)) * kNumPropSegments;
   let cumulProb = 0;
-  for (let i = 0; i < kNumMutations; i++) {
+  for (let i = 0; i < table.mutations.length; i++) {
     cumulProb += table.probs[i];
-    if (t < cumulProb) {
+    if (modT < cumulProb) {
+      console.log("Picking mutation " + i);
       return table.mutations[i];
     }
   }
+  console.log("Picking mutation 0");
   return table.mutations[0];
 }
 
