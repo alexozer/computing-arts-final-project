@@ -9,9 +9,12 @@ const kScales = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75];
 const kHues = [0 / 7, 1 / 7, 2 / 7, 3 / 7, 4 / 7, 5 / 7, 6 / 7, 7 / 7];
 const kOscilAmpls = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5];
 const kOscilFreqs = [0, 0.5, 1, 1.5, 2, 2.5, 3];
+// const kLightnessess = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
+const kColorFreqs = [0, 0.5, 1, 1.5, 2, 2.5, 3];
 
 enum Prop {
-  kRotVelX,
+  // kRotVelX,
+  kLightness,
   kRotVelY,
   kScaleX,
   kScaleY,
@@ -31,7 +34,8 @@ export type Obj = {
 
   gridKey: string,
   pos: vec3,
-  rotX: number,
+  // rotX: number,
+  colorFreq: number,
   rotY: number,
   scaleX: number,
   scaleY: number,
@@ -72,11 +76,12 @@ function genMarkovModel(): MarkovModel {
 
 function tickObj(obj: Obj, deltaSeconds: number) {
   vec3.scale(obj.pos, obj.gridPos, kGridSpacing);
-  obj.rotX += kRotSpeeds[obj.props[Prop.kRotVelX]] * deltaSeconds;
+  // obj.rotX += kRotSpeeds[obj.props[Prop.kRotVelX]] * deltaSeconds;
+  obj.colorFreq = kColorFreqs[obj.props[Prop.kLightness]];
   obj.rotY += kRotSpeeds[obj.props[Prop.kRotVelY]] * deltaSeconds;
   obj.scaleX = kScales[obj.props[Prop.kScaleX]];
   obj.scaleY = kScales[obj.props[Prop.kScaleY]];
-  obj.hue = kHues[obj.props[Prop.kHue]];
+  obj.hue = (kHues[obj.props[Prop.kHue]] + 0.1) % 1;
 
   // TODO this should actually be lerping position
   obj.ampl = kOscilAmpls[obj.props[Prop.kAmpl]];
@@ -94,7 +99,8 @@ function createObj(props: PropValueIdx[], currProp: Prop, gridPos: vec3): Obj {
     /* Actual visual properties we can display */
     gridKey: `${gridPos[0]},${gridPos[1]},${gridPos[2]}`,
     pos: vec3.fromValues(0, 0, 0),
-    rotX: 0,
+    colorFreq: 0.5,
+    // rotX: 0,
     rotY: 0,
     scaleX: 1,
     scaleY: 1,
@@ -203,7 +209,7 @@ export function genSimWorld(): SimWorld {
     markovModel: genMarkovModel(),
   };
 
-  const defaultObj: Obj = createObj([2, 1, 3, 3, 0, 0, 0], Prop.kRotVelX, vec3.fromValues(0, 0, 0));
+  const defaultObj: Obj = createObj([3, 1, 3, 3, 0, 0, 0], Prop.kLightness, vec3.fromValues(0, 0, 0));
   addObjToSimWorld(defaultObj, world);
 
 

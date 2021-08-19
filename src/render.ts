@@ -32,21 +32,20 @@ export class RenderScene {
     document.body.appendChild(this.renderer.domElement);
     this.clock = new th.Clock();
 
-    const axis = new th.AxesHelper(10);
+    // const axis = new th.AxesHelper(10);
+    // this.scene.add(axis);
 
-    this.scene.add(axis);
-
-    const light = new th.DirectionalLight(0xffffff, 0.5);
-
+    const light = new th.DirectionalLight(0xffffff, 0.75);
     light.position.set(100, 100, 100);
-
     this.scene.add(light);
 
     const light2 = new th.DirectionalLight(0xffffff, 0.5);
-
     light2.position.set(-100, 100, -100);
-
     this.scene.add(light2);
+
+    const light3 = new th.DirectionalLight(0xffffff, 0.25);
+    light3.position.set(100, -100, -100);
+    this.scene.add(light3);
 
     this.camera.position.x = 5;
     this.camera.position.y = 5;
@@ -106,7 +105,7 @@ export class RenderScene {
     // TODO should we use instancing here eventually?
     for (const simObj of this.sim.objs.values()) {
       if (!this.simObjMap.has(simObj)) {
-        const mesh = new th.Mesh(new th.BoxGeometry(), new th.MeshLambertMaterial());
+        const mesh = new th.Mesh(new th.BoxGeometry(), new th.MeshPhongMaterial());
         this.simObjMap.set(simObj, mesh);
         this.scene.add(mesh);
       }
@@ -117,11 +116,11 @@ export class RenderScene {
       mesh.position.x = simObj.pos[0];
       mesh.position.y = simObj.pos[1];
       mesh.position.z = simObj.pos[2];
-      mesh.rotation.x = simObj.rotX;
+      mesh.rotation.x = 0;
       mesh.rotation.y = simObj.rotY;
       mesh.scale.x = simObj.scaleX;
       mesh.scale.y = simObj.scaleY;
-      (mesh.material as th.MeshLambertMaterial).color.setHSL(simObj.hue, 1, 0.5);
+      (mesh.material as th.MeshPhongMaterial).color.setHSL(simObj.hue, 1, 0.5);
       // TODO oscillation stuff
     }
   }
