@@ -1,3 +1,4 @@
+import { vec3 } from 'gl-matrix';
 import * as th from 'three';
 import { OrbitControls } from './OrbitControls';
 import { genSimWorld, Obj, SimWorld, updateSimWorld } from './sim2';
@@ -7,6 +8,10 @@ const FOV = 60;
 const ASPECT_RATIO = 640 / 480;
 const NEAR_DISTANCE = 0.1;
 const FAR_DISTANCE = 20000;
+
+function vec3ToThree(v: vec3): th.Vector3 {
+  return new th.Vector3(v[0], v[1], v[2]);
+}
 
 export class RenderScene {
   private scene: th.Scene;
@@ -60,6 +65,25 @@ export class RenderScene {
 
     this.sim = genSimWorld();
     this.simObjMap = new Map();
+
+    // this.addArrows();
+  }
+
+  private addArrows() {
+    const start = vec3.create();
+    const end = vec3.create();
+    const dir = vec3.create();
+    for (const parent of this.sim.objs.values()) {
+      for (const child of parent.children) {
+        vec3.lerp(start, parent.pos, child.pos, 0.25);
+        vec3.lerp(end, parent.pos, child.pos, 0.75);
+        vec3.sub(dir, end, start);
+        const len = vec3.len(dir);
+        vec3.normalize(dir, dir);
+        const arrow = new th.ArrowHelper(vec3ToThree(start), vec3ToThree(dir), len, 0xffff00);
+        this.scene.add(arrow);
+      }
+    }
   }
 
   private update(): void {

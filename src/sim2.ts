@@ -2,7 +2,7 @@ import { ReadonlyVec3, vec3 } from "gl-matrix";
 import { stringify } from "querystring";
 
 const kProps = 7;
-const kGridSpacing = 2;
+const kGridSpacing = 3;
 
 const kRotSpeeds = [-3, -2, -1, 0, 1, 2, 3];
 const kScales = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75];
@@ -26,6 +26,7 @@ export type Obj = {
   props: PropValueIdx[]; // One PropValueIdx per property
   currProp: Prop,
   gridPos: vec3,
+  children: Obj[],
   childrenLeft: number,
 
   gridKey: string,
@@ -87,6 +88,7 @@ function createObj(props: PropValueIdx[], currProp: Prop, gridPos: vec3): Obj {
     props,
     currProp,
     gridPos,
+    children: [],
     childrenLeft: Math.floor(Math.random() * 4) + 2,
 
     /* Actual visual properties we can display */
@@ -126,6 +128,18 @@ const scratchVec3c = vec3.create();
 const scratchVec3d = vec3.create();
 const scratchVec3e = vec3.create();
 
+function pickMarkov(probTable: number[]): number {
+  const t = Math.random();
+  let cumulProb = 0;
+  for (let i = 0; i < probTable.length; i++) {
+    cumulProb += probTable[i];
+    if (t < cumulProb) {
+      return i;
+    }
+  }
+  return probTable.length - 1;
+}
+
 function spawnChildObj(world: SimWorld) {
   // Pick object that can spawn a child
   const parent = randSetElem(world.spawnObjs);
@@ -148,10 +162,17 @@ function spawnChildObj(world: SimWorld) {
   });
 
   if (availCells.length > 0) {
+    // Property to mutate of child is current value of current property of parent
+    // Stochastically choose new property value of child
+    const childPropToMutate: Prop = parent.props[parent.currProp];
+    const childProps = parent.props.slice();
+    childProps[childPropToMutate] = pickMarkov(world.markovModel[childPropToMutate]);
+
     // Pick a cell position and generate a child there
     const chosenCell: vec3 = availCells[Math.floor(Math.random() * availCells.length)];
-    const childObj = createObj(parent.props.slice(), parent.currProp, vec3.clone(chosenCell));
+    const childObj = createObj(childProps, childPropToMutate, vec3.clone(chosenCell));
     addObjToSimWorld(childObj, world);
+    parent.children.push(childObj);
 
     // Cleanup
     parent.childrenLeft--;
@@ -185,9 +206,11 @@ export function genSimWorld(): SimWorld {
   const defaultObj: Obj = createObj([2, 1, 3, 3, 0, 0, 0], Prop.kRotVelX, vec3.fromValues(0, 0, 0));
   addObjToSimWorld(defaultObj, world);
 
-  spawnChildObj(world);
-  spawnChildObj(world);
-  spawnChildObj(world);
+
+  // Add a crapton of objects
+  for (let i = 0; i < 5000; i++) {
+    spawnChildObj(world);
+  }
 
   return world;
 }
