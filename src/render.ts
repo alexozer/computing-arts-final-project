@@ -1,7 +1,6 @@
 import * as th from 'three';
-import { genSim, updateSim } from './sim';
-import { Obj, Sim } from './simTypes';
 import { OrbitControls } from './OrbitControls';
+import { genSimWorld, Obj, SimWorld, updateSimWorld } from './sim2';
 
 // Match the original game's camera settings, for now
 const FOV = 60;
@@ -16,7 +15,7 @@ export class RenderScene {
   private clock: th.Clock;
   private orbit: OrbitControls;
 
-  private sim: Sim;
+  private sim: SimWorld;
   private simObjMap: Map<Obj, th.Mesh>;
 
   constructor() {
@@ -59,13 +58,13 @@ export class RenderScene {
 
     this.scene.background = new th.Color(0x343468);
 
-    this.sim = genSim();
+    this.sim = genSimWorld();
     this.simObjMap = new Map();
   }
 
   private update(): void {
     const deltaSeconds = this.clock.getDelta();
-    updateSim(this.sim, deltaSeconds);
+    updateSimWorld(this.sim, deltaSeconds);
     this.updateSceneFromSim();
     this.renderer.render(this.scene, this.camera);
   }
@@ -73,7 +72,7 @@ export class RenderScene {
   private updateSceneFromSim() {
     // Prune threejs objects that don't exist in sim
     for (const [simObj, mesh] of this.simObjMap.entries()) {
-      if (!this.sim.objs.has(simObj)) {
+      if (!this.sim.objs.has(simObj.gridKey)) {
         this.simObjMap.delete(simObj);
         this.scene.remove(mesh);
       }
@@ -81,9 +80,9 @@ export class RenderScene {
 
     // Add threejs objects that don't exist for sim objects
     // TODO should we use instancing here eventually?
-    for (const simObj of this.sim.objs) {
+    for (const simObj of this.sim.objs.values()) {
       if (!this.simObjMap.has(simObj)) {
-        const mesh = new th.Mesh(new th.BoxGeometry(), new th.MeshToonMaterial());
+        const mesh = new th.Mesh(new th.BoxGeometry(), new th.MeshLambertMaterial());
         this.simObjMap.set(simObj, mesh);
         this.scene.add(mesh);
       }
@@ -96,10 +95,9 @@ export class RenderScene {
       mesh.position.z = simObj.pos[2];
       mesh.rotation.x = simObj.rotX;
       mesh.rotation.y = simObj.rotY;
-      mesh.scale.x = simObj.scaleX * simObj.scaleOverall;
-      mesh.scale.y = simObj.scaleY * simObj.scaleOverall;
-      mesh.scale.z = simObj.scaleOverall;
-      (mesh.material as th.MeshToonMaterial).color.setHSL(simObj.hue, 1, 0.5);
+      mesh.scale.x = simObj.scaleX;
+      mesh.scale.y = simObj.scaleY;
+      (mesh.material as th.MeshLambertMaterial).color.setHSL(simObj.hue, 1, 0.5);
       // TODO oscillation stuff
     }
   }
