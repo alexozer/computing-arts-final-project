@@ -35,15 +35,15 @@ export class RenderScene {
     // const axis = new th.AxesHelper(10);
     // this.scene.add(axis);
 
-    const light = new th.DirectionalLight(0xffffff, 0.75);
+    const light = new th.DirectionalLight(0xffffff, 0.70);
     light.position.set(100, 100, 100);
     this.scene.add(light);
 
-    const light2 = new th.DirectionalLight(0xffffff, 0.5);
+    const light2 = new th.DirectionalLight(0xffffff, 0.4);
     light2.position.set(-100, 100, -100);
     this.scene.add(light2);
 
-    const light3 = new th.DirectionalLight(0xffffff, 0.25);
+    const light3 = new th.DirectionalLight(0xffffff, 0.2);
     light3.position.set(100, -100, -100);
     this.scene.add(light3);
 

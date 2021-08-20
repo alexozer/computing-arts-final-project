@@ -2,14 +2,13 @@ import { ReadonlyVec3, vec3 } from "gl-matrix";
 import { stringify } from "querystring";
 
 const kProps = 7;
-const kGridSpacing = 3;
+const kGridSpacing = 2;
 
 const kRotSpeeds = [-3, -2, -1, 0, 1, 2, 3];
 const kScales = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75];
 const kHues = [0 / 7, 1 / 7, 2 / 7, 3 / 7, 4 / 7, 5 / 7, 6 / 7, 7 / 7];
 const kOscilAmpls = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5];
 const kOscilFreqs = [0, 0.5, 1, 1.5, 2, 2.5, 3];
-// const kLightnessess = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
 const kColorFreqs = [0, 0.5, 1, 1.5, 2, 2.5, 3];
 
 enum Prop {
