@@ -48,9 +48,9 @@ export class RenderScene {
     light3.position.set(100, -100, -100);
     this.scene.add(light3);
 
-    this.camera.position.x = 5;
-    this.camera.position.y = 5;
-    this.camera.position.z = 5;
+    this.camera.position.x = 40;
+    this.camera.position.y = 40;
+    this.camera.position.z = -40;
 
     this.camera.lookAt(this.scene.position);
 
@@ -61,7 +61,7 @@ export class RenderScene {
     this.orbit = new OrbitControls(this.camera, this.renderer.domElement);
     this.orbit.update();
 
-    this.scene.background = new th.Color(0x343468);
+    this.scene.background = new th.Color(0x101010);
 
     this.sim = genSimWorld();
     this.simObjMap = new Map();
@@ -91,7 +91,6 @@ export class RenderScene {
     updateSimWorld(this.sim, deltaSeconds);
     this.updateSceneFromSim();
     this.renderer.render(this.scene, this.camera);
-    this.context.drawImage(this.renderer.domElement, 0, 0);
   }
 
   private updateSceneFromSim() {

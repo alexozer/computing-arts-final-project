@@ -8,13 +8,13 @@ function main() {
   const canvas4 = document.getElementById("canvas4") as HTMLDivElement;
   const renderScenes = [
     new RenderScene(canvas1),
-    // new RenderScene(canvas2, renderer),
-    // new RenderScene(canvas3, renderer),
-    // new RenderScene(canvas4, renderer),
+    new RenderScene(canvas2),
+    new RenderScene(canvas3),
+    new RenderScene(canvas4),
   ];
 
   // Global hook so we can peer inside
-  (window as any).scene = scene;
+  (window as any).scene = renderScenes;
 }
 
 main();
