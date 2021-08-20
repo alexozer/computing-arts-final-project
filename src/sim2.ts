@@ -58,6 +58,16 @@ function genMarkovTable(entries: number): number[] {
   for (let i = 0; i < entries; i++) {
     probs[i] /= sum;
   }
+
+  // Increase standard deviation
+  for (let i = 0; i < entries; i++) {
+    probs[i] = Math.pow(probs[i], 0.6);
+  }
+  // Renormalize
+  for (let i = 0; i < entries; i++) {
+    probs[i] /= sum;
+  }
+
   return probs;
 }
 
