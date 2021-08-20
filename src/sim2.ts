@@ -43,7 +43,7 @@ export type Obj = {
   freq: number,
 }
 
-type MarkovModel = number[][]; // One Markov table per property
+export type MarkovModel = number[][]; // One Markov table per property
 
 export type SimWorld = {
   objs: Map<string, Obj>; // Map from serialized "x,y,z" cell location to object
@@ -65,7 +65,7 @@ function genMarkovTable(entries: number): number[] {
   return probs;
 }
 
-function genMarkovModel(): MarkovModel {
+export function genMarkovModel(): MarkovModel {
   const model: MarkovModel = [];
   for (let i = 0; i < kProps; i++) {
     model.push(genMarkovTable(kProps));
@@ -199,13 +199,13 @@ function addObjToSimWorld(obj: Obj, world: SimWorld) {
   world.objs.set(obj.gridKey, obj);
 }
 
-export function genSimWorld(): SimWorld {
+export function genSimWorld(markovModel: MarkovModel): SimWorld {
   const objMap: Map<string, Obj> = new Map();
   const spawnObjs: Set<Obj> = new Set();
   const world = {
     objs: objMap,
     spawnObjs: spawnObjs,
-    markovModel: genMarkovModel(),
+    markovModel: markovModel,
   };
 
   const defaultObj: Obj = createObj([3, 1, 3, 3, 0, 0, 0], Prop.kLightness, vec3.fromValues(0, 0, 0));

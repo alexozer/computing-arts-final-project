@@ -1,7 +1,7 @@
 import { vec3 } from 'gl-matrix';
 import * as th from 'three';
 import { OrbitControls } from './OrbitControls';
-import { genSimWorld, Obj, SimWorld, updateSimWorld } from './sim2';
+import { genSimWorld, Obj, SimWorld, updateSimWorld, MarkovModel } from './sim2';
 
 // Match the original game's camera settings, for now
 const FOV = 60;
@@ -24,8 +24,7 @@ export class RenderScene {
   private sim: SimWorld;
   private simObjMap: Map<Obj, th.Mesh>;
 
-  constructor(private div: HTMLDivElement) {
-    this.scene = new th.Scene();
+  constructor(private div: HTMLDivElement, private markovModel: MarkovModel) {
     this.renderer = new th.WebGLRenderer({ antialias: true });
     this.camera = new th.PerspectiveCamera(FOV, 1 /* dummy */, NEAR_DISTANCE, FAR_DISTANCE);
     this.renderer.setPixelRatio( window.devicePixelRatio );
@@ -33,9 +32,26 @@ export class RenderScene {
     div.appendChild(this.renderer.domElement);
     this.clock = new th.Clock();
 
+    this.genScene();
+
     // const axis = new th.AxesHelper(10);
     // this.scene.add(axis);
 
+    this.renderer.setAnimationLoop(() => this.update());
+    window.addEventListener('resize', () => this.onResize());
+    this.onResize();
+
+    this.orbit = new OrbitControls(this.camera, this.renderer.domElement);
+    this.orbit.update();
+
+    this.sim = genSimWorld(this.markovModel);
+    this.simObjMap = new Map();
+
+    // this.addArrows();
+  }
+
+  private genScene() {
+    this.scene = new th.Scene();
     const light = new th.DirectionalLight(0xffffff, 0.70);
     light.position.set(100, 100, 100);
     this.scene.add(light);
@@ -53,20 +69,13 @@ export class RenderScene {
     this.camera.position.z = -40;
 
     this.camera.lookAt(this.scene.position);
-
-    this.renderer.setAnimationLoop(() => this.update());
-    window.addEventListener('resize', () => this.onResize());
-    this.onResize();
-
-    this.orbit = new OrbitControls(this.camera, this.renderer.domElement);
-    this.orbit.update();
-
     this.scene.background = new th.Color(0x101010);
+  }
 
-    this.sim = genSimWorld();
+  public genNewWorld() {
+    this.sim = genSimWorld(this.markovModel);
     this.simObjMap = new Map();
-
-    // this.addArrows();
+    this.genScene();
   }
 
   private addArrows() {
