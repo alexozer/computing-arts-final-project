@@ -1,25 +1,21 @@
 import { ReadonlyVec3, vec3 } from "gl-matrix";
 import { stringify } from "querystring";
 
-const kProps = 7;
+const kProps = 5;
 const kGridSpacing = 2;
 
-const kRotSpeeds = [-3, -2, -1, 0, 1, 2, 3];
-const kScales = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75];
-const kHues = [0 / 7, 1 / 7, 2 / 7, 3 / 7, 4 / 7, 5 / 7, 6 / 7, 7 / 7];
-const kOscilAmpls = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5];
-const kOscilFreqs = [0, 0.5, 1, 1.5, 2, 2.5, 3];
-const kColorFreqs = [0, 0.5, 1, 1.5, 2, 2.5, 3];
+const kRotSpeeds = [-4, -2, 0, 2, 4];
+const kScales = [0.30, 0.6, 1, 1.5, 2];
+const kHues = [0 / 5, 1 / 5, 2 / 5, 3 / 5, 4 / 5];
+const kColorFreqs = [0, 1, 2, 4, 8];
 
 enum Prop {
   // kRotVelX,
-  kLightness,
+  kColorFreq,
   kRotVelY,
   kScaleX,
   kScaleY,
   kHue,
-  kAmpl,
-  kFreq,
 }
 
 type PropValueIdx = number;
@@ -39,8 +35,6 @@ export type Obj = {
   scaleX: number,
   scaleY: number,
   hue: number,
-  ampl: number,
-  freq: number,
 }
 
 export type MarkovModel = number[][]; // One Markov table per property
@@ -76,15 +70,11 @@ export function genMarkovModel(): MarkovModel {
 function tickObj(obj: Obj, deltaSeconds: number) {
   vec3.scale(obj.pos, obj.gridPos, kGridSpacing);
   // obj.rotX += kRotSpeeds[obj.props[Prop.kRotVelX]] * deltaSeconds;
-  obj.colorFreq = kColorFreqs[obj.props[Prop.kLightness]];
+  obj.colorFreq = kColorFreqs[obj.props[Prop.kColorFreq]];
   obj.rotY += kRotSpeeds[obj.props[Prop.kRotVelY]] * deltaSeconds;
   obj.scaleX = kScales[obj.props[Prop.kScaleX]];
   obj.scaleY = kScales[obj.props[Prop.kScaleY]];
-  obj.hue = (kHues[obj.props[Prop.kHue]] + 0.1) % 1;
-
-  // TODO this should actually be lerping position
-  obj.ampl = kOscilAmpls[obj.props[Prop.kAmpl]];
-  obj.freq = kOscilFreqs[obj.props[Prop.kFreq]];
+  obj.hue = (kHues[obj.props[Prop.kHue]] + 0.09) % 1;
 }
 
 function createObj(props: PropValueIdx[], currProp: Prop, gridPos: vec3): Obj {
@@ -104,9 +94,6 @@ function createObj(props: PropValueIdx[], currProp: Prop, gridPos: vec3): Obj {
     scaleX: 1,
     scaleY: 1,
     hue: 0,
-    // TODO these should be setting position
-    ampl: 0,
-    freq: 0,
   };
 
   tickObj(obj, 0);
@@ -208,7 +195,7 @@ export function genSimWorld(markovModel: MarkovModel): SimWorld {
     markovModel: markovModel,
   };
 
-  const defaultObj: Obj = createObj([3, 1, 3, 3, 0, 0, 0], Prop.kLightness, vec3.fromValues(0, 0, 0));
+  const defaultObj: Obj = createObj([3, 1, 3, 3, 0, 0, 0], Prop.kColorFreq, vec3.fromValues(0, 0, 0));
   addObjToSimWorld(defaultObj, world);
 
 

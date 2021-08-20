@@ -5,7 +5,7 @@ import { genSimWorld, Obj, SimWorld, updateSimWorld, MarkovModel } from './sim2'
 
 // Match the original game's camera settings, for now
 const FOV = 60;
-const ASPECT_RATIO = 640 / 480;
+// const ASPECT_RATIO = 640 / 480;
 const NEAR_DISTANCE = 0.1;
 const FAR_DISTANCE = 20000;
 
