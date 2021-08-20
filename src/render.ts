@@ -24,7 +24,7 @@ export class RenderScene {
   private sim: SimWorld;
   private simObjMap: Map<Obj, th.Mesh>;
 
-  constructor(private div: HTMLDivElement, private markovModel: MarkovModel) {
+  constructor(private div: HTMLDivElement, model: MarkovModel) {
     this.renderer = new th.WebGLRenderer({ antialias: true });
     this.camera = new th.PerspectiveCamera(FOV, 1 /* dummy */, NEAR_DISTANCE, FAR_DISTANCE);
     this.renderer.setPixelRatio( window.devicePixelRatio );
@@ -44,7 +44,7 @@ export class RenderScene {
     this.orbit = new OrbitControls(this.camera, this.renderer.domElement);
     this.orbit.update();
 
-    this.sim = genSimWorld(this.markovModel);
+    this.sim = genSimWorld(model);
     this.simObjMap = new Map();
 
     // this.addArrows();
@@ -72,8 +72,8 @@ export class RenderScene {
     this.scene.background = new th.Color(0x101010);
   }
 
-  public genNewWorld() {
-    this.sim = genSimWorld(this.markovModel);
+  public genNewWorld(model: MarkovModel) {
+    this.sim = genSimWorld(model);
     this.simObjMap = new Map();
     this.genScene();
   }

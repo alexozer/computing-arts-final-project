@@ -1,7 +1,8 @@
 import { ReadonlyVec3, vec3 } from "gl-matrix";
 import { stringify } from "querystring";
+import { MarkovModel } from "./markov";
 
-const kProps = 5;
+export const kProps = 5;
 const kGridSpacing = 2;
 
 const kRotSpeeds = [-4, -2, 0, 2, 4];
@@ -38,45 +39,11 @@ export type Obj = {
   lightness: number,
 }
 
-export type MarkovModel = number[][]; // One Markov table per property
-
 export type SimWorld = {
   objs: Map<string, Obj>; // Map from serialized "x,y,z" cell location to object
   spawnObjs: Set<Obj>, // Set of objects that can have children spawned still
   markovModel: MarkovModel;
   time: number,
-}
-
-function genMarkovTable(entries: number): number[] {
-  const probs: number[] = [];
-  let sum = 0;
-  for (let i = 0; i < entries; i++) {
-    const p = Math.random();
-    probs.push(p);
-    sum += p;
-  }
-  for (let i = 0; i < entries; i++) {
-    probs[i] /= sum;
-  }
-
-  // Increase standard deviation
-  for (let i = 0; i < entries; i++) {
-    probs[i] = Math.pow(probs[i], 0.6);
-  }
-  // Renormalize
-  for (let i = 0; i < entries; i++) {
-    probs[i] /= sum;
-  }
-
-  return probs;
-}
-
-export function genMarkovModel(): MarkovModel {
-  const model: MarkovModel = [];
-  for (let i = 0; i < kProps; i++) {
-    model.push(genMarkovTable(kProps));
-  }
-  return model;
 }
 
 function tickObj(obj: Obj, deltaSeconds: number, time: number) {
@@ -88,7 +55,7 @@ function tickObj(obj: Obj, deltaSeconds: number, time: number) {
   obj.scaleY = kScales[obj.props[Prop.kScaleY]];
   obj.hue = (kHues[obj.props[Prop.kHue]] + 0.09) % 1;
   const colorFreq = kColorFreqs[obj.props[Prop.kColorFreq]];
-  obj.lightness = 0.5 + Math.sin(time * 2 * Math.PI * colorFreq) * 0.1;
+  obj.lightness = 0.4 + Math.sin(time * 2 * Math.PI * colorFreq) * 0.15;
 }
 
 function createObj(props: PropValueIdx[], currProp: Prop, gridPos: vec3): Obj {
