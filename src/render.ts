@@ -19,17 +19,18 @@ export class RenderScene {
   private renderer: th.WebGLRenderer;
   private clock: th.Clock;
   private orbit: OrbitControls;
+  private context: CanvasRenderingContext2D;
 
   private sim: SimWorld;
   private simObjMap: Map<Obj, th.Mesh>;
 
-  constructor() {
+  constructor(private div: HTMLDivElement) {
     this.scene = new th.Scene();
-    this.camera = new th.PerspectiveCamera(FOV, ASPECT_RATIO, NEAR_DISTANCE, FAR_DISTANCE);
     this.renderer = new th.WebGLRenderer({ antialias: true });
+    this.camera = new th.PerspectiveCamera(FOV, 1 /* dummy */, NEAR_DISTANCE, FAR_DISTANCE);
     this.renderer.setPixelRatio( window.devicePixelRatio );
     this.renderer.outputEncoding = th.sRGBEncoding;
-    document.body.appendChild(this.renderer.domElement);
+    div.appendChild(this.renderer.domElement);
     this.clock = new th.Clock();
 
     // const axis = new th.AxesHelper(10);
@@ -90,6 +91,7 @@ export class RenderScene {
     updateSimWorld(this.sim, deltaSeconds);
     this.updateSceneFromSim();
     this.renderer.render(this.scene, this.camera);
+    this.context.drawImage(this.renderer.domElement, 0, 0);
   }
 
   private updateSceneFromSim() {
@@ -126,8 +128,8 @@ export class RenderScene {
   }
 
   private onResize(): void {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.aspect = this.div.clientWidth / this.div.clientHeight;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(this.div.clientWidth, this.div.clientHeight);
   }
 }
