@@ -130,7 +130,7 @@ export class RenderScene {
       mesh.rotation.y = simObj.rotY;
       mesh.scale.x = simObj.scaleX;
       mesh.scale.y = simObj.scaleY;
-      (mesh.material as th.MeshPhongMaterial).color.setHSL(simObj.hue, 1, 0.5);
+      (mesh.material as th.MeshPhongMaterial).color.setHSL(simObj.hue, 1, simObj.lightness);
       // TODO oscillation stuff
     }
   }

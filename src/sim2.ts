@@ -7,7 +7,7 @@ const kGridSpacing = 2;
 const kRotSpeeds = [-4, -2, 0, 2, 4];
 const kScales = [0.30, 0.6, 1, 1.5, 2];
 const kHues = [0 / 5, 1 / 5, 2 / 5, 3 / 5, 4 / 5];
-const kColorFreqs = [0, 1, 2, 4, 8];
+const kColorFreqs = [0, 0.24, 0.57, 1.2, 2.1];
 
 enum Prop {
   // kRotVelX,
@@ -35,6 +35,7 @@ export type Obj = {
   scaleX: number,
   scaleY: number,
   hue: number,
+  lightness: number,
 }
 
 export type MarkovModel = number[][]; // One Markov table per property
@@ -43,6 +44,7 @@ export type SimWorld = {
   objs: Map<string, Obj>; // Map from serialized "x,y,z" cell location to object
   spawnObjs: Set<Obj>, // Set of objects that can have children spawned still
   markovModel: MarkovModel;
+  time: number,
 }
 
 function genMarkovTable(entries: number): number[] {
@@ -67,7 +69,7 @@ export function genMarkovModel(): MarkovModel {
   return model;
 }
 
-function tickObj(obj: Obj, deltaSeconds: number) {
+function tickObj(obj: Obj, deltaSeconds: number, time: number) {
   vec3.scale(obj.pos, obj.gridPos, kGridSpacing);
   // obj.rotX += kRotSpeeds[obj.props[Prop.kRotVelX]] * deltaSeconds;
   obj.colorFreq = kColorFreqs[obj.props[Prop.kColorFreq]];
@@ -75,6 +77,8 @@ function tickObj(obj: Obj, deltaSeconds: number) {
   obj.scaleX = kScales[obj.props[Prop.kScaleX]];
   obj.scaleY = kScales[obj.props[Prop.kScaleY]];
   obj.hue = (kHues[obj.props[Prop.kHue]] + 0.09) % 1;
+  const colorFreq = kColorFreqs[obj.props[Prop.kColorFreq]];
+  obj.lightness = 0.5 + Math.sin(time * 2 * Math.PI * colorFreq) * 0.1;
 }
 
 function createObj(props: PropValueIdx[], currProp: Prop, gridPos: vec3): Obj {
@@ -94,9 +98,10 @@ function createObj(props: PropValueIdx[], currProp: Prop, gridPos: vec3): Obj {
     scaleX: 1,
     scaleY: 1,
     hue: 0,
+    lightness: 0.5,
   };
 
-  tickObj(obj, 0);
+  tickObj(obj, 0, 0);
   return obj;
 }
 
@@ -193,11 +198,11 @@ export function genSimWorld(markovModel: MarkovModel): SimWorld {
     objs: objMap,
     spawnObjs: spawnObjs,
     markovModel: markovModel,
+    time: 0,
   };
 
-  const defaultObj: Obj = createObj([3, 1, 3, 3, 0, 0, 0], Prop.kColorFreq, vec3.fromValues(0, 0, 0));
+  const defaultObj: Obj = createObj([0, 1, 3, 3, 0, 0, 0], Prop.kColorFreq, vec3.fromValues(0, 0, 0));
   addObjToSimWorld(defaultObj, world);
-
 
   // Add a crapton of objects
   for (let i = 0; i < 5000; i++) {
@@ -208,7 +213,8 @@ export function genSimWorld(markovModel: MarkovModel): SimWorld {
 }
 
 export function updateSimWorld(world: SimWorld, deltaSeconds: number) {
+  world.time += deltaSeconds;
   for (const obj of world.objs.values()) {
-    tickObj(obj, deltaSeconds);
+    tickObj(obj, deltaSeconds, world.time);
   }
 }
